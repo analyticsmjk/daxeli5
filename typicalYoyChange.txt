@@ -1,4 +1,4 @@
-I have used the State of Conneticut Real Estate Sales data at data.gov
+I have used the State of Connecticut Real Estate Sales data at data.gov
 Metadata:
 url: https://data.ct.gov/api/views/5mzw-sjtu/rows.csv?accessType=DOWNLOAD
 Columns: 'Serial Number', 'List Year', 'Date Recorded', 'Town', 'Address',
@@ -6,7 +6,7 @@ Columns: 'Serial Number', 'List Year', 'Date Recorded', 'Town', 'Address',
        'Residential Type', 'Non Use Code', 'Assessor Remarks', 'OPM remarks',
        'Location'
 Relationships:
-'Date Table'[Date] ---> Date[Date Recorded]
+'Date'[Date] ---> 'Real Estate Sales'[Date Recorded]
 
 Below is the DAX code for the measures:
 [Deal Size]
