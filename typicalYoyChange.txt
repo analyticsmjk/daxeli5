@@ -1,0 +1,64 @@
+I have used the State of Conneticut Real Estate Sales data at data.gov
+Metadata:
+url: https://data.ct.gov/api/views/5mzw-sjtu/rows.csv?accessType=DOWNLOAD
+Columns: 'Serial Number', 'List Year', 'Date Recorded', 'Town', 'Address',
+       'Assessed Value', 'Sale Amount', 'Sales Ratio', 'Property Type',
+       'Residential Type', 'Non Use Code', 'Assessor Remarks', 'OPM remarks',
+       'Location'
+Relationships:
+'Date Table'[Date] ---> Date[Date Recorded]
+
+Below is the DAX code for the measures:
+[Deal Size]
+[Deal Size Last Year]
+[Change %]
+[Most Frequent Change %]
+
+Warning: 
+1.When doing a similar calculation as part of analysis,
+rounding of the values that we find the frequency of, should
+be done as otherwise values which are practically the same 
+will not be counted together!
+2.If using the Real estate sales data mentioned above, you
+may come to a point where you may have errors thrown from power bi
+due to blank values in the date column - pandas is the answer.
+
+from pandas import read_csv,DataFrame,Series
+realEstateSalesData: DataFrame= read_csv("Real_Estate_Sales_2001-2023_GL.csv")
+print(realEstateSalesData.columns)
+dateRecordedWithValue: Series = realEstateSalesData['Date Recorded'].notna()
+realEstateSalesData[dateRecordedWithValue].to_csv("Real_Estate_Sales_2001-2023_GL_NoNa.csv")
+
+Below are the DAX measures:
+
+[Deal Size] = SUM(
+  'Real_Estate_Sales_2001-2023_GL_NoNa'[Sale Amount])
+
+[Deal Size Last Year] = CALCULATE(
+      [Deal Size],
+      SAMEPERIODLASTYEAR('Calendar'[date]))
+
+[Change %] = DIVIDE(
+      [Deal Size] - [Deal Size Last Year],[Deal  Size Last Year],10000000000)
+
+[Most Frequent Change %] = 
+  VAR _valueTable =
+  ADDCOLUMNS(
+      'Calendar',
+      "Single Day Change",
+      [Change %] -- <-- Rounding could be done at this point
+  )
+  VAR _frequencyTable =
+  GROUPBY(
+      _valueTable,
+      [Single Day Change],
+      "Frequency",
+      COUNTX(CURRENTGROUP(),[Single Day Change])
+  )
+  VAR _mostFrequentValue = TOPN(
+      1,
+     _frequencyTable,
+      [Frequency], --column
+      DESC
+  )
+  return MINX(_mostFrequentValue,[Single Day Change])
